@@ -10,6 +10,12 @@
 # testing
 /coverage
 
+# playwright
+/playwright-report/
+/playwright/.auth/
+/test-results/
+*.zip
+
 # next.js
 /.next/
 /out/
