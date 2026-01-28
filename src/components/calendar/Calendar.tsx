@@ -10,7 +10,7 @@ import {
   EventClickArg,
   EventContentArg,
 } from "@fullcalendar/core";
-import { useModal } from "@/hooks/useModal";
+import { useModal } from "@/lib/hooks/useModal";
 import { Modal } from "@/components/ui/modal";
 
 interface CalendarEvent extends EventInput {
@@ -29,6 +29,7 @@ const Calendar: React.FC = () => {
   const [eventLevel, setEventLevel] = useState("");
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const calendarRef = useRef<FullCalendar>(null);
+  const idCounter = useRef(3);
   const { isOpen, openModal, closeModal } = useModal();
 
   const calendarsEvents = {
@@ -40,25 +41,33 @@ const Calendar: React.FC = () => {
 
   useEffect(() => {
     // Initialize with some events
+    const today = new Date()
+    const addDays = (days: number) => {
+      const d = new Date(today)
+      d.setDate(d.getDate() + days)
+      return d.toISOString().split('T')[0]
+    }
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setEvents([
       {
-        id: "1",
-        title: "Event Conf.",
-        start: new Date().toISOString().split("T")[0],
-        extendedProps: { calendar: "Danger" },
+        id: '1',
+        title: 'Event Conf.',
+        start: addDays(0),
+        extendedProps: { calendar: 'Danger' },
       },
       {
-        id: "2",
-        title: "Meeting",
-        start: new Date(Date.now() + 86400000).toISOString().split("T")[0],
-        extendedProps: { calendar: "Success" },
+        id: '2',
+        title: 'Meeting',
+        start: addDays(1),
+        extendedProps: { calendar: 'Success' },
       },
       {
-        id: "3",
-        title: "Workshop",
-        start: new Date(Date.now() + 172800000).toISOString().split("T")[0],
-        end: new Date(Date.now() + 259200000).toISOString().split("T")[0],
-        extendedProps: { calendar: "Primary" },
+        id: '3',
+        title: 'Workshop',
+        start: addDays(2),
+        end: addDays(3),
+        extendedProps: { calendar: 'Primary' },
       },
     ]);
   }, []);
@@ -98,8 +107,10 @@ const Calendar: React.FC = () => {
       );
     } else {
       // Add new event
+      const newId = `${idCounter.current + 1}`;
+      idCounter.current += 1;
       const newEvent: CalendarEvent = {
-        id: Date.now().toString(),
+        id: newId,
         title: eventTitle,
         start: eventStartDate,
         end: eventEndDate,
@@ -281,3 +292,6 @@ const renderEventContent = (eventInfo: EventContentArg) => {
 };
 
 export default Calendar;
+
+
+
