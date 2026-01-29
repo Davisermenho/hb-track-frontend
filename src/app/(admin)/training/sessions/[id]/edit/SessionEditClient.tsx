@@ -624,7 +624,7 @@ export default function SessionEditClient({
     
     window.addEventListener('keydown', handleEscKey);
     return () => window.removeEventListener('keydown', handleEscKey);
-  }, [isDeleteOpen, isPublishConfirmOpen]);
+  }, [isDeleteOpen, isPublishConfirmOpen, onClose]);
 
   const focusStatus = focusIsCritical
     ? {
