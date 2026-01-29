@@ -13,37 +13,28 @@
  * - Sections: estado atual, presença, wellness, carga, insights (optional)
  */
 
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { statisticsService, AthleteSelfReport } from '@/lib/api/statistics-operational';
 import { AlertCircle, TrendingUp, Heart, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
-type ViewState = 'loading' | 'error' | 'data';
-
 export default function AthleteSelfView() {
-  const [state, setState] = useState<ViewState>('loading');
-  const [data, setData] = useState<AthleteSelfReport | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery<AthleteSelfReport>({
+    queryKey: ['statistics', 'athlete-self'],
+    queryFn: () => statisticsService.getAthleteSelf(),
+  });
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    setState('loading');
-    setError(null);
-    try {
-      const report = await statisticsService.getAthleteSelf();
-      setData(report);
-      setState('data');
-    } catch (err: any) {
-      setError(err.message || 'Não foi possível carregar seus dados');
-      setState('error');
-    }
-  };
+  const errorMessage =
+    error instanceof Error ? error.message : 'Não foi possível carregar seus dados';
 
   // Loading State - Skeleton
-  if (state === 'loading') {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
         <div className="max-w-4xl mx-auto space-y-6">
@@ -64,7 +55,7 @@ export default function AthleteSelfView() {
   }
 
   // Error State - With retry button
-  if (state === 'error') {
+  if (isError) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-6">
         <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-lg p-8 text-center space-y-4 border border-gray-200 dark:border-gray-700">
@@ -74,10 +65,10 @@ export default function AthleteSelfView() {
               Não foi possível carregar seus dados
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              {error || 'Tente novamente em alguns instantes.'}
+              {errorMessage || 'Tente novamente em alguns instantes.'}
             </p>
           </div>
-          <Button onClick={loadData} variant="default" className="w-full">
+          <Button onClick={() => refetch()} variant="default" className="w-full">
             Tentar novamente
           </Button>
         </div>

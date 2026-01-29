@@ -8,7 +8,7 @@
  * @version 1.0.0
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import {
   Users,
   Dumbbell,
@@ -67,27 +67,21 @@ const ROUTE_ICONS: Record<string, LucideIcon> = {
 // =============================================================================
 
 export function usePinnedItems(): UsePinnedItemsReturn {
-  const [pinnedItems, setPinnedItems] = useState<PinnedItem[]>([]);
-
-  // Carregar do localStorage na inicialização
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          // Restaurar ícones
-          const withIcons = parsed.map((item: any) => ({
-            ...item,
-            icon: ROUTE_ICONS[item.path] || Star,
-          }));
-          setPinnedItems(withIcons);
-        }
-      } catch (e) {
-        console.error('Erro ao carregar itens fixados:', e);
-      }
+  const [pinnedItems, setPinnedItems] = useState<PinnedItem[]>(() => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (!stored) return [];
+      const parsed = JSON.parse(stored);
+      return parsed.map((item: any) => ({
+        ...item,
+        icon: ROUTE_ICONS[item.path] || Star,
+      }));
+    } catch (e) {
+      console.error('Erro ao carregar itens fixados:', e);
+      return [];
     }
-  }, []);
+  });
 
   // Persistir no localStorage
   const persistItems = useCallback((items: PinnedItem[]) => {

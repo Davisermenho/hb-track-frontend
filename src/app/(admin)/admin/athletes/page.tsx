@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { OrganizationTeamsTree } from '@/components/Athletes/OrganizationTeamsTree';
 import { TeamAthletesList } from '@/components/Athletes/TeamAthletesList';
@@ -31,24 +31,26 @@ const STORAGE_KEY = 'hb_athletes_last_team';
 
 export default function AthletesPage() {
   const router = useRouter();
-  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
-  const [selectedTeamName, setSelectedTeamName] = useState<string>('');
+  const [initialTeam] = useState(() => {
+    if (typeof window === 'undefined') {
+      return { teamId: null as string | null, teamName: '' };
+    }
+    const savedTeam = localStorage.getItem(STORAGE_KEY);
+    if (!savedTeam) {
+      return { teamId: null as string | null, teamName: '' };
+    }
+    try {
+      const { teamId, teamName } = JSON.parse(savedTeam);
+      return { teamId: teamId ?? null, teamName: teamName ?? '' };
+    } catch (error) {
+      console.error('Erro ao carregar equipe salva:', error);
+      return { teamId: null as string | null, teamName: '' };
+    }
+  });
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(initialTeam.teamId);
+  const [selectedTeamName, setSelectedTeamName] = useState<string>(initialTeam.teamName);
   const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  // Carregar última equipe selecionada ao montar o componente
-  useEffect(() => {
-    const savedTeam = localStorage.getItem(STORAGE_KEY);
-    if (savedTeam) {
-      try {
-        const { teamId, teamName } = JSON.parse(savedTeam);
-        setSelectedTeamId(teamId);
-        setSelectedTeamName(teamName);
-      } catch (error) {
-        console.error('Erro ao carregar equipe salva:', error);
-      }
-    }
-  }, []);
 
   const handleTeamSelect = (teamId: string, teamName: string) => {
     setSelectedTeamId(teamId);

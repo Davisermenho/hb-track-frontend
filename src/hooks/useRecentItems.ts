@@ -8,8 +8,7 @@
  * @version 1.0.0
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import { usePathname } from 'next/navigation';
+import { useState, useCallback } from 'react';
 import {
   Users,
   Dumbbell,
@@ -80,28 +79,21 @@ const ROUTE_CONFIG: Record<string, { title: string; icon: LucideIcon; type: Rece
 // =============================================================================
 
 export function useRecentItems(): UseRecentItemsReturn {
-  const pathname = usePathname();
-  const [recentItems, setRecentItems] = useState<RecentItem[]>([]);
-
-  // Carregar do localStorage na inicialização
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          // Restaurar ícones (não são serializáveis)
-          const withIcons = parsed.map((item: any) => ({
-            ...item,
-            icon: ROUTE_CONFIG[item.path]?.icon || Home,
-          }));
-          setRecentItems(withIcons);
-        }
-      } catch (e) {
-        console.error('Erro ao carregar itens recentes:', e);
-      }
+  const [recentItems, setRecentItems] = useState<RecentItem[]>(() => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (!stored) return [];
+      const parsed = JSON.parse(stored);
+      return parsed.map((item: any) => ({
+        ...item,
+        icon: ROUTE_CONFIG[item.path]?.icon || Home,
+      }));
+    } catch (e) {
+      console.error('Erro ao carregar itens recentes:', e);
+      return [];
     }
-  }, []);
+  });
 
   // Persistir no localStorage
   const persistItems = useCallback((items: RecentItem[]) => {
@@ -147,28 +139,6 @@ export function useRecentItems(): UseRecentItemsReturn {
       localStorage.removeItem(STORAGE_KEY);
     }
   }, []);
-
-  // Rastrear navegação automaticamente
-  useEffect(() => {
-    if (!pathname) return;
-    
-    // Ignorar rotas de autenticação e API
-    if (pathname.includes('/signin') || 
-        pathname.includes('/signup') || 
-        pathname.includes('/api')) {
-      return;
-    }
-
-    const config = ROUTE_CONFIG[pathname];
-    if (config) {
-      addRecentItem({
-        path: pathname,
-        title: config.title,
-        icon: config.icon,
-        type: config.type,
-      });
-    }
-  }, [pathname, addRecentItem]);
 
   return {
     recentItems,

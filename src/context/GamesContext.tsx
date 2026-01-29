@@ -9,7 +9,7 @@
 
 'use client';
 
-import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
+import { createContext, useContext, useState, useCallback, ReactNode, useEffect, useMemo } from 'react';
 import { useTeams } from '@/hooks/useTeams';
 import { type Team } from '@/lib/api/teams';
 
@@ -115,7 +115,10 @@ const GamesContext = createContext<GamesContextType | undefined>(undefined);
 
 export function GamesProvider({ children }: { children: ReactNode }) {
   const { data: teams = [], isLoading: teamsLoading } = useTeams();
-  const [selectedTeam, setSelectedTeamState] = useState<Team | null>(null);
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem('hb_games_selected_team');
+  });
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [activeTab, setActiveTab] = useState<GameTab>('overview');
@@ -123,29 +126,24 @@ export function GamesProvider({ children }: { children: ReactNode }) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<GameViewMode>('cards');
 
-  // Carregar equipe do localStorage
+  const selectedTeam = useMemo(() => {
+    if (!teams.length) return null;
+    const team = teams.find(t => t.id === selectedTeamId);
+    return team || teams[0] || null;
+  }, [teams, selectedTeamId]);
+
   useEffect(() => {
-    if (typeof window !== 'undefined' && teams.length > 0) {
-      const savedTeamId = localStorage.getItem('hb_games_selected_team');
-      if (savedTeamId) {
-        const team = teams.find(t => t.id === savedTeamId);
-        if (team) {
-          setSelectedTeamState(team);
-        }
-      } else if (teams.length > 0) {
-        // Auto-selecionar primeira equipe
-        setSelectedTeamState(teams[0]);
+    if (typeof window !== 'undefined') {
+      if (selectedTeam?.id) {
+        localStorage.setItem('hb_games_selected_team', selectedTeam.id);
+      } else {
+        localStorage.removeItem('hb_games_selected_team');
       }
     }
-  }, [teams]);
+  }, [selectedTeam?.id]);
 
   const setSelectedTeam = useCallback((team: Team | null) => {
-    setSelectedTeamState(team);
-    if (team) {
-      localStorage.setItem('hb_games_selected_team', team.id);
-    } else {
-      localStorage.removeItem('hb_games_selected_team');
-    }
+    setSelectedTeamId(team?.id ?? null);
     // Limpar seleção de jogo ao trocar equipe
     setSelectedGameId(null);
     setActiveTab('overview');

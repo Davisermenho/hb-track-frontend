@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Eye, Loader2, Users } from 'lucide-react';
 import { teamsService, type TeamRegistration } from '@/lib/api/teams';
 import { cn } from '@/lib/utils';
@@ -82,21 +83,21 @@ export function TeamAthletesList({ teamId, teamName, onAthleteSelect, selectedAt
           Nenhuma atleta vinculada
         </p>
         <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
-          A equipe "{teamName}" não possui atletas vinculadas no momento
+          A equipe &quot;{teamName}&quot; não possui atletas vinculadas no momento
         </p>
         <div className="flex gap-3">
-          <a
+          <Link
             href="/admin/cadastro?flow=user&role=atleta"
             className="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors text-sm font-medium"
           >
             + Cadastrar Atleta
-          </a>
-          <a
+          </Link>
+          <Link
             href="/admin/athletes/import"
             className="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-sm font-medium"
           >
             Importar Planilha
-          </a>
+          </Link>
         </div>
       </div>
     );

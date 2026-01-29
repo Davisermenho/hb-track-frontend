@@ -10,7 +10,7 @@
 'use client';
 
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useCompetitionsContext, CompetitionTab } from '@/context/CompetitionsContext';
 import { useCompetition } from '@/hooks/useCompetitions';
 import CompetitionsHeader from '@/components/competitions/CompetitionsHeader';
@@ -32,8 +32,6 @@ export default function CompetitionsClient() {
     activeTab,
   } = useCompetitionsContext();
   
-  const [isInitialized, setIsInitialized] = useState(false);
-
   // Query params
   const competitionIdParam = searchParams.get('competitionId');
   const tabParam = searchParams.get('tab') as CompetitionTab | null;
@@ -62,7 +60,6 @@ export default function CompetitionsClient() {
       setIsCreateModalOpen(true);
     }
 
-    setIsInitialized(true);
   }, [competitionIdParam, tabParam, isNewParam, setSelectedCompetitionId, setActiveTab, setIsCreateModalOpen]);
 
   // Atualiza competição no contexto quando carregada
@@ -103,11 +100,6 @@ export default function CompetitionsClient() {
     }
     setActiveTab(tab);
   }, [router, pathname, selectedCompetitionId, setActiveTab]);
-
-  // Loading state
-  if (!isInitialized) {
-    return <AppSkeleton />;
-  }
 
   // Render
   return (

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { X } from 'lucide-react';
 import {
@@ -45,9 +45,7 @@ const FOCUS_FIELDS = [
   { key: 'focus_physical_pct' as const, label: 'Físico' },
 ];
 
-export function EditTemplateModal({ isOpen, template, onClose, onSuccess }: EditTemplateModalProps) {
-  const [currentTemplateId, setCurrentTemplateId] = useState<string | null>(null);
-  
+function EditTemplateForm({ template, onClose, onSuccess }: Omit<EditTemplateModalProps, 'isOpen'>) {
   // Inicializar valores computados diretamente no estado
   const [name, setName] = useState(() => template?.name || '');
   const [description, setDescription] = useState(() => template?.description || '');
@@ -66,29 +64,6 @@ export function EditTemplateModal({ isOpen, template, onClose, onSuccess }: Edit
   // Compute focus validation
   const focusStatus = computeFocusSummary(focus, { mode: 'lenient', justification: '' });
   const total = focusStatus.totalFocusRounded;
-
-  // Atualizar valores quando template muda (sem setState direto)
-  useEffect(() => {
-    if (template && template.id !== currentTemplateId) {
-      setCurrentTemplateId(template.id);
-      // Usar batch de updates
-      React.startTransition(() => {
-        setName(template.name);
-        setDescription(template.description || '');
-        setIcon(template.icon);
-        setIsFavorite(template.is_favorite);
-        setFocus({
-          focus_attack_positional_pct: template.focus_attack_positional_pct,
-          focus_defense_positional_pct: template.focus_defense_positional_pct,
-          focus_transition_offense_pct: template.focus_transition_offense_pct,
-          focus_transition_defense_pct: template.focus_transition_defense_pct,
-          focus_attack_technical_pct: template.focus_attack_technical_pct,
-          focus_defense_technical_pct: template.focus_defense_technical_pct,
-          focus_physical_pct: template.focus_physical_pct,
-        });
-      });
-    }
-  }, [template]);
 
   const updateMutation = useMutation({
     mutationFn: (data: SessionTemplateUpdate) => TrainingSessionsAPI.updateSessionTemplate(template.id, data),
@@ -137,8 +112,6 @@ export function EditTemplateModal({ isOpen, template, onClose, onSuccess }: Edit
 
   // Usar computeFocusSummary para validação
   const focusSummary = computeFocusSummary(focus);
-
-  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -329,5 +302,18 @@ export function EditTemplateModal({ isOpen, template, onClose, onSuccess }: Edit
         </form>
       </div>
     </div>
+  );
+}
+
+export function EditTemplateModal({ isOpen, template, onClose, onSuccess }: EditTemplateModalProps) {
+  if (!isOpen) return null;
+
+  return (
+    <EditTemplateForm
+      key={template.id}
+      template={template}
+      onClose={onClose}
+      onSuccess={onSuccess}
+    />
   );
 }

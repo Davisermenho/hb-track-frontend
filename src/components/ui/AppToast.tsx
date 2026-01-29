@@ -48,24 +48,18 @@ export default function AppToast({
   onClose,
   isVisible,
 }: AppToastProps) {
-  const [isShowing, setIsShowing] = useState(false);
-
   useEffect(() => {
     if (isVisible) {
-      const showToast = () => setIsShowing(true);
-      showToast();
       if (duration > 0) {
         const timer = setTimeout(() => {
           onClose();
         }, duration);
         return () => clearTimeout(timer);
       }
-    } else {
-      setIsShowing(false);
     }
   }, [isVisible, duration, onClose]);
 
-  if (!isShowing) return null;
+  if (!isVisible) return null;
 
   const Icon = iconMap[type];
 

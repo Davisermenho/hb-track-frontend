@@ -221,7 +221,7 @@ export default function ConfirmStep({ teamId, onSuccess, onBack }: ConfirmStepPr
       <div className="text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
         <p>
           💡 Você poderá editar todos os dados após a importação. 
-          A competição será criada com status "Rascunho".
+          A competição será criada com status &quot;Rascunho&quot;.
         </p>
       </div>
 

@@ -10,7 +10,7 @@
 
 'use client';
 
-import React, { Suspense, useEffect, useState } from 'react';
+import React, { Suspense } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
@@ -42,18 +42,6 @@ const SessionEditClient = React.lazy(() =>
 );
 
 export function SessionEditorModal({ sessionId, isOpen, onClose, onSuccess }: SessionEditorModalProps) {
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    if (isOpen && sessionId) {
-      // Pequeno delay para mostrar loading state
-      const timer = setTimeout(() => setIsLoading(false), 300);
-      return () => clearTimeout(timer);
-    } else {
-      setIsLoading(true);
-    }
-  }, [isOpen, sessionId]);
-
   if (!sessionId) return null;
 
   return (

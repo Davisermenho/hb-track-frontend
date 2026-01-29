@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { CheckCircle, AlertCircle, Lock, User, Loader2 } from 'lucide-react'
 import AthleteProfileForm, { type AthleteFormData } from './forms/AthleteProfileForm'
@@ -33,9 +34,7 @@ export default function WelcomeFlow({ token }: WelcomeFlowProps) {
   
   // Estados
   const [step, setStep] = useState<Step>('loading')
-  const [welcomeInfo, setWelcomeInfo] = useState<WelcomeInfo | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [errorCode, setErrorCode] = useState<string | null>(null)
   
   // Form fields - Step 1 (Senha)
   const [password, setPassword] = useState('')
@@ -43,33 +42,39 @@ export default function WelcomeFlow({ token }: WelcomeFlowProps) {
   
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Verificar token ao carregar
-  useEffect(() => {
-    verifyToken()
-  }, [token])
-
-  const verifyToken = async () => {
-    try {
+  const verification = useQuery<WelcomeInfo, Error & { code?: string }>({
+    queryKey: ['welcome-verify', token],
+    enabled: !!token,
+    queryFn: async () => {
       const response = await fetch(`${API_URL}/auth/welcome/verify?token=${token}`, {
         credentials: 'include',
       })
-      
+
       const data = await response.json()
-      
+
       if (!response.ok) {
-        setError(data.detail?.message || 'Token inválido')
-        setErrorCode(data.detail?.code || 'UNKNOWN')
-        setStep('error')
-        return
+        const err = new Error(data.detail?.message || 'Token inválido') as Error & { code?: string }
+        err.code = data.detail?.code || 'UNKNOWN'
+        throw err
       }
-      
-      setWelcomeInfo(data)
-      setStep('password')
-    } catch (err) {
-      setError('Erro ao verificar convite. Tente novamente.')
-      setStep('error')
-    }
-  }
+
+      return data
+    },
+  })
+
+  const welcomeInfo = verification.data ?? null
+  const verificationError = verification.error as (Error & { code?: string }) | null
+  const verificationErrorCode = verificationError?.code || 'UNKNOWN'
+  const verificationErrorMessage = verificationError?.message || 'Token inválido'
+
+  const effectiveStep: Step =
+    step === 'loading'
+      ? verification.isError
+        ? 'error'
+        : verification.isSuccess
+          ? 'password'
+          : 'loading'
+      : step
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -141,7 +146,7 @@ export default function WelcomeFlow({ token }: WelcomeFlowProps) {
   // ============================================================================
   // Render: Loading
   // ============================================================================
-  if (step === 'loading') {
+  if (effectiveStep === 'loading') {
     return (
       <div data-testid="welcome-loading" className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
         <div className="text-center">
@@ -155,7 +160,8 @@ export default function WelcomeFlow({ token }: WelcomeFlowProps) {
   // ============================================================================
   // Render: Error
   // ============================================================================
-  if (step === 'error') {
+  if (effectiveStep === 'error') {
+    const displayError = step === 'loading' ? verificationErrorMessage : (error || 'Este link de convite não é válido.')
     return (
       <div data-testid="welcome-error" className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 px-4">
         <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-8 text-center">
@@ -164,13 +170,13 @@ export default function WelcomeFlow({ token }: WelcomeFlowProps) {
           </div>
           
           <h1 data-testid="welcome-error-title" className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-            {errorCode === 'TOKEN_EXPIRED' ? 'Convite Expirado' : 
-             errorCode === 'TOKEN_USED' ? 'Convite Já Utilizado' : 
+            {verificationErrorCode === 'TOKEN_EXPIRED' ? 'Convite Expirado' : 
+             verificationErrorCode === 'TOKEN_USED' ? 'Convite Já Utilizado' : 
              'Convite Inválido'}
           </h1>
           
           <p className="text-slate-600 dark:text-slate-400 mb-8">
-            {error || 'Este link de convite não é válido.'}
+            {displayError}
           </p>
           
           <div className="space-y-3">
@@ -181,7 +187,7 @@ export default function WelcomeFlow({ token }: WelcomeFlowProps) {
               Ir para Login
             </button>
             
-            {errorCode === 'TOKEN_EXPIRED' && (
+            {verificationErrorCode === 'TOKEN_EXPIRED' && (
               <p className="text-sm text-slate-500">
                 Entre em contato com quem enviou o convite para solicitar um novo.
               </p>
@@ -195,7 +201,7 @@ export default function WelcomeFlow({ token }: WelcomeFlowProps) {
   // ============================================================================
   // Render: Success
   // ============================================================================
-  if (step === 'success') {
+  if (effectiveStep === 'success') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 px-4">
         <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-8 text-center">
@@ -224,7 +230,7 @@ export default function WelcomeFlow({ token }: WelcomeFlowProps) {
   // ============================================================================
   // Render: Steps (Password & Profile)
   // ============================================================================
-  const currentStep = step === 'password' ? 1 : 2
+  const currentStep = effectiveStep === 'password' ? 1 : 2
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 px-4 py-8">
@@ -279,7 +285,7 @@ export default function WelcomeFlow({ token }: WelcomeFlowProps) {
           )}
 
           {/* Step 1: Password */}
-          {step === 'password' && (
+          {effectiveStep === 'password' && (
             <form data-testid="welcome-password-form" onSubmit={handlePasswordSubmit} className="space-y-6">
               <div>
                 <p className="text-slate-600 dark:text-slate-400 text-sm mb-6">
@@ -345,7 +351,7 @@ export default function WelcomeFlow({ token }: WelcomeFlowProps) {
           )}
 
           {/* Step 2: Profile - Formulário dinâmico baseado em invitee_kind */}
-          {step === 'profile' && welcomeInfo && (
+          {effectiveStep === 'profile' && welcomeInfo && (
             <>
               {welcomeInfo.invitee_kind === 'athlete' && (
                 <AthleteProfileForm

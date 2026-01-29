@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Cross2Icon, DownloadIcon, FileTextIcon, EnvelopeClosedIcon, CalendarIcon, ClockIcon, PersonIcon,
   TargetIcon, CheckCircledIcon, ExclamationTriangleIcon, ReloadIcon
@@ -91,8 +91,11 @@ const MicrocycleReportModal: React.FC<MicrocycleReportModalProps> = ({
   onClose,
 }) => {
   const [selectedMicrocycle, setSelectedMicrocycle] = useState('1');
-  const [report, setReport] = useState<MicrocycleReport | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const report = useMemo(
+    () => (isOpen && selectedMicrocycle ? generateMockReport(selectedMicrocycle) : null),
+    [isOpen, selectedMicrocycle]
+  );
+  const isLoading = false;
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationStep, setGenerationStep] = useState('');
 
@@ -102,16 +105,6 @@ const MicrocycleReportModal: React.FC<MicrocycleReportModalProps> = ({
     { id: '3', label: 'MC 3 (15-21 Jan)', current: false },
     { id: '4', label: 'MC 4 (22-28 Jan)', current: false },
   ];
-
-  useEffect(() => {
-    if (isOpen && selectedMicrocycle) {
-      setIsLoading(true);
-      setTimeout(() => {
-        setReport(generateMockReport(selectedMicrocycle));
-        setIsLoading(false);
-      }, 500);
-    }
-  }, [isOpen, selectedMicrocycle]);
 
   const handleGeneratePDF = async () => {
     setIsGenerating(true);

@@ -8,7 +8,7 @@
 
 'use client';
 
-import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, ReactNode, useMemo, useEffect } from 'react';
 import { useTeams } from '@/hooks/useTeams';
 import { type Team } from '@/lib/api/teams';
 
@@ -28,12 +28,20 @@ const TrainingContext = createContext<TrainingContextType | undefined>(undefined
 
 export function TrainingProvider({ children }: { children: ReactNode }) {
   const { data: teams = [], isLoading: teamsLoading } = useTeams();
-  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem('hb_training_selected_team');
+  });
   const [searchTerm, setSearchTerm] = useState('');
+  const selectedTeam = useMemo(() => {
+    if (!teams.length) return null;
+    const team = teams.find(t => t.id === selectedTeamId);
+    return team || null;
+  }, [teams, selectedTeamId]);
 
   // Auto-selecionar primeira equipe quando carrega
   const handleSetSelectedTeam = useCallback((team: Team | null) => {
-    setSelectedTeam(team);
+    setSelectedTeamId(team?.id ?? null);
     // Persiste no localStorage para manter entre reloads
     if (team) {
       localStorage.setItem('hb_training_selected_team', team.id);
@@ -41,19 +49,11 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem('hb_training_selected_team');
     }
   }, []);
-
-  // Carregar equipe do localStorage quando teams estiver disponível
   useEffect(() => {
-    if (typeof window === 'undefined' || teams.length === 0 || selectedTeam) return;
-
-    const savedTeamId = localStorage.getItem('hb_training_selected_team');
-    if (savedTeamId) {
-      const team = teams.find(t => t.id === savedTeamId);
-      if (team) {
-        setSelectedTeam(team);
-      }
+    if (typeof window !== 'undefined' && selectedTeam?.id) {
+      localStorage.setItem('hb_training_selected_team', selectedTeam.id);
     }
-  }, [teams, selectedTeam]);
+  }, [selectedTeam?.id]);
 
   return (
     <TrainingContext.Provider 

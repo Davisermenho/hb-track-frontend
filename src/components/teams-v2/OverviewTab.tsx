@@ -790,7 +790,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                           Nenhum {filterLabel} agendado
                         </p>
                         <p className="text-xs text-slate-400 mt-1 max-w-[200px] mx-auto">
-                          Tente selecionar "Todos" para ver outras atividades.
+                          Tente selecionar &quot;Todos&quot; para ver outras atividades.
                         </p>
                       </div>
                     );

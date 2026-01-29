@@ -12,7 +12,7 @@
  * @version 1.0.0
  */
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { teamsService } from '@/lib/api/teams';
 
@@ -202,24 +202,6 @@ export function TeamSeasonProvider({ children }: TeamSeasonProviderProps) {
     queryClient.invalidateQueries({ queryKey: ['statistics'] });
     queryClient.invalidateQueries({ queryKey: ['sidebar-badges'] });
   }, [queryClient]);
-
-  // Auto-selecionar primeira equipe se não houver seleção
-  useEffect(() => {
-    if (teams.length > 0 && !selectedTeamId) {
-      const firstTeam = teams[0];
-      setSelectedTeamId(firstTeam.id);
-      localStorage.setItem(STORAGE_KEYS.TEAM, firstTeam.id);
-    }
-  }, [teams, selectedTeamId]);
-
-  // Auto-selecionar temporada ativa se não houver seleção
-  useEffect(() => {
-    if (seasons.length > 0 && !selectedSeasonId) {
-      const activeSeason = seasons.find(s => s.is_active) || seasons[0];
-      setSelectedSeasonId(activeSeason.id);
-      localStorage.setItem(STORAGE_KEYS.SEASON, activeSeason.id);
-    }
-  }, [seasons, selectedSeasonId]);
 
   const value: TeamSeasonContextType = useMemo(() => ({
     selectedTeam,

@@ -42,28 +42,17 @@ const STORAGE_KEY = 'hbtrack-last-sync';
 
 export function useSyncStatus(): UseSyncStatusReturn {
   const [status, setStatus] = useState<SyncState>('synced');
-  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
-  const [isOnline, setIsOnline] = useState(true);
+  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(() => {
+    if (typeof window === 'undefined') return null;
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? new Date(stored) : null;
+  });
+  const [isOnline, setIsOnline] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return navigator.onLine;
+  });
   const [pendingChanges, setPendingChanges] = useState(0);
   const [message, setMessage] = useState<string>();
-
-  // Carregar última sincronização do localStorage
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // Verificar conexão inicial
-      setIsOnline(navigator.onLine);
-      
-      // Carregar última sync
-      try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-          setLastSyncedAt(new Date(stored));
-        }
-      } catch (e) {
-        // Ignorar
-      }
-    }
-  }, []);
 
   // Escutar mudanças de conexão
   useEffect(() => {
@@ -99,13 +88,6 @@ export function useSyncStatus(): UseSyncStatusReturn {
     };
   }, []);
 
-  // Atualizar status quando há mudanças pendentes
-  useEffect(() => {
-    if (pendingChanges > 0 && isOnline && status === 'synced') {
-      setStatus('syncing');
-    }
-  }, [pendingChanges, isOnline, status]);
-
   // Disparar sincronização manual
   const triggerSync = useCallback(() => {
     if (!isOnline) {
@@ -140,7 +122,10 @@ export function useSyncStatus(): UseSyncStatusReturn {
   // Adicionar mudança pendente
   const addPendingChange = useCallback(() => {
     setPendingChanges(prev => prev + 1);
-  }, []);
+    if (isOnline && status === 'synced') {
+      setStatus('syncing');
+    }
+  }, [isOnline, status]);
 
   return {
     status,

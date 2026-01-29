@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { 
   Users, 
   UserPlus, 
@@ -433,10 +434,10 @@ const SuperAdminDashboard: React.FC = () => {
         <footer className="mt-16 pt-8 border-t border-slate-200 dark:border-slate-800">
           <div className="flex flex-wrap gap-4 text-xs text-slate-500 dark:text-slate-400">
             <span className="font-semibold text-slate-700 dark:text-slate-300">Links rápidos:</span>
-            <a href="/teams" className="hover:text-slate-900 dark:hover:text-white transition-colors">Equipes</a>
-            <a href="/athletes" className="hover:text-slate-900 dark:hover:text-white transition-colors">Atletas</a>
-            <a href="/training" className="hover:text-slate-900 dark:hover:text-white transition-colors">Treinos</a>
-            <a href="/games" className="hover:text-slate-900 dark:hover:text-white transition-colors">Jogos</a>
+            <Link href="/teams" className="hover:text-slate-900 dark:hover:text-white transition-colors">Equipes</Link>
+            <Link href="/athletes" className="hover:text-slate-900 dark:hover:text-white transition-colors">Atletas</Link>
+            <Link href="/training" className="hover:text-slate-900 dark:hover:text-white transition-colors">Treinos</Link>
+            <Link href="/games" className="hover:text-slate-900 dark:hover:text-white transition-colors">Jogos</Link>
           </div>
         </footer>
       </main>

@@ -308,28 +308,25 @@ function DayColumn({
   const { setNodeRef, isOver } = useDroppable({ id: dateKey });
 
   // Smart time slots generation based on sessions
+  const sessionTimes = useMemo(() => {
+    if (sessions.length === 0) return { minHour: 8, maxHour: 22 };
+    
+    let minHour = 23, maxHour = 0;
+    sessions.forEach(s => {
+      const hour = new Date(s.session_at).getHours();
+      minHour = Math.min(minHour, hour - 1);
+      maxHour = Math.max(maxHour, hour + Math.ceil((s.duration_planned_minutes || 60) / 60));
+    });
+    
+    return { minHour: Math.max(0, minHour), maxHour: Math.min(23, maxHour) };
+  }, [sessions.length]);
+
   const timeSlots = useMemo(() => {
     const getVisibleHours = (daySessions: TrainingSession[]) => {
       if (daySessions.length === 0) {
-        // Default useful hours: 08:00 to 22:00
-        return Array.from({ length: 15 }, (_, i) => i + 8); // 8 to 22 inclusive
+        return Array.from({ length: sessionTimes.maxHour - sessionTimes.minHour + 1 }, (_, i) => i + sessionTimes.minHour);
       }
-
-      const startHours = daySessions.map(s => {
-        const time = new Date(s.session_at);
-        return time.getHours();
-      });
-      const endHours = daySessions.map(s => {
-        const time = new Date(s.session_at);
-        const duration = s.duration_planned_minutes || 60;
-        time.setMinutes(time.getMinutes() + duration);
-        return time.getHours();
-      });
-
-      const minHour = Math.max(0, Math.min(...startHours) - 1); // 1h margin before
-      const maxHour = Math.min(23, Math.max(...endHours) + 1);  // 1h margin after
-
-      return Array.from({ length: maxHour - minHour + 1 }, (_, i) => i + minHour);
+      return Array.from({ length: sessionTimes.maxHour - sessionTimes.minHour + 1 }, (_, i) => i + sessionTimes.minHour);
     };
 
     const visibleHours = getVisibleHours(sessions);

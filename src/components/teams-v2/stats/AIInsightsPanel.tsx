@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Cross2Icon, ExclamationTriangleIcon, CheckCircledIcon, LightningBoltIcon, ChevronRightIcon } from '@radix-ui/react-icons';
 import { Sparkles, TrendingUp, TrendingDown, Brain } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -90,19 +90,9 @@ const generateMockInsights = (): Insight[] => [
 // ============================================================================
 
 const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({ teamId, isOpen, onClose }) => {
-  const [insights, setInsights] = useState<Insight[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const insights = useMemo(() => (isOpen ? generateMockInsights() : []), [isOpen, teamId]);
+  const isLoading = false;
   const [filter, setFilter] = useState<'all' | 'positive' | 'warning' | 'suggestion'>('all');
-
-  useEffect(() => {
-    if (isOpen) {
-      setIsLoading(true);
-      setTimeout(() => {
-        setInsights(generateMockInsights());
-        setIsLoading(false);
-      }, 1000);
-    }
-  }, [isOpen, teamId]);
 
   const filteredInsights = filter === 'all' 
     ? insights 

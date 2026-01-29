@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { Cross2Icon, EnterFullScreenIcon, DownloadIcon, InfoCircledIcon, PersonIcon, CalendarIcon } from '@radix-ui/react-icons';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -61,20 +61,9 @@ const generateMockData = (): AthleteLoadData[] => {
 // ============================================================================
 
 const LoadHeatmapChart: React.FC<LoadHeatmapChartProps> = ({ teamId, isOpen, onClose }) => {
-  const [data, setData] = useState<AthleteLoadData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const data = useMemo(() => (isOpen ? generateMockData() : []), [isOpen, teamId]);
+  const isLoading = false;
   const [viewMode, setViewMode] = useState<'load' | 'wellness' | 'attendance'>('load');
-
-  useEffect(() => {
-    if (isOpen) {
-      setIsLoading(true);
-      // Simular carregamento
-      setTimeout(() => {
-        setData(generateMockData());
-        setIsLoading(false);
-      }, 800);
-    }
-  }, [isOpen, teamId]);
 
   const getColorForValue = (value: number, mode: string) => {
     if (mode === 'attendance') {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { Cross2Icon, DownloadIcon, InfoCircledIcon, CalendarIcon, CheckCircledIcon, CrossCircledIcon } from '@radix-ui/react-icons';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -76,19 +76,9 @@ const generateMockAttendanceData = (): AttendanceData[] => {
 // ============================================================================
 
 const AttendanceHeatmap: React.FC<AttendanceHeatmapProps> = ({ teamId, isOpen, onClose }) => {
-  const [data, setData] = useState<AttendanceData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const data = useMemo(() => (isOpen ? generateMockAttendanceData() : []), [isOpen, teamId]);
+  const isLoading = false;
   const [sortBy, setSortBy] = useState<'name' | 'rate' | 'streak'>('rate');
-
-  useEffect(() => {
-    if (isOpen) {
-      setIsLoading(true);
-      setTimeout(() => {
-        setData(generateMockAttendanceData());
-        setIsLoading(false);
-      }, 600);
-    }
-  }, [isOpen, teamId]);
 
   const sortedData = [...data].sort((a, b) => {
     if (sortBy === 'name') return a.athleteName.localeCompare(b.athleteName);

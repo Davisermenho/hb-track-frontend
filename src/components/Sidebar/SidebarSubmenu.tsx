@@ -11,7 +11,7 @@
  * @version 4.1.0 - Suporte a badge string e tooltip para visibilidade de rotas
  */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -49,23 +49,18 @@ export function SidebarSubmenu({
   defaultOpen = false,
 }: SidebarSubmenuProps) {
   const pathname = usePathname();
-  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const [isToggledOpen, setIsToggledOpen] = useState(defaultOpen);
   
   // Verificar se algum item do submenu está ativo
   const isActive = items.some(
     item => pathname === item.href || pathname.startsWith(item.href + '/')
   );
 
-  // Abrir automaticamente se um item estiver ativo
-  useEffect(() => {
-    if (isActive && !isOpen) {
-      setIsOpen(true);
-    }
-  }, [isActive]);
+  const isOpen = isToggledOpen || isActive;
 
   const toggleButton = (
     <button
-      onClick={() => setIsOpen(!isOpen)}
+      onClick={() => setIsToggledOpen((prev) => !prev)}
       title={tooltip}
       className={cn(
         'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200',

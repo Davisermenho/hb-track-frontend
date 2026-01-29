@@ -185,7 +185,7 @@ const ATHLETE_TOUR_STEPS: Step[] = [
         <h3 className="text-lg font-semibold mb-2">Presets Rápidos ⚡</h3>
         <p className="text-sm text-gray-600 dark:text-gray-400">
           Use os botões de preset para preenchimento rápido: 
-          "Me sinto ótimo!" (8-9), "Normal" (5-6), "Fatigado" (2-3). 
+          &quot;Me sinto ótimo!&quot; (8-9), &quot;Normal&quot; (5-6), &quot;Fatigado&quot; (2-3). 
           Você pode ajustar individualmente depois.
         </p>
       </div>
@@ -226,7 +226,7 @@ const ATHLETE_TOUR_STEPS: Step[] = [
         <h3 className="text-lg font-semibold mb-2">Progresso de Badges 🏅</h3>
         <p className="text-sm text-gray-600 dark:text-gray-400">
           Conquiste badges respondendo wellness consistentemente! 
-          <strong>Meta: 90% de respostas mensais.</strong> Badge "Wellness Champion" é dado 
+          <strong>Meta: 90% de respostas mensais.</strong> Badge &quot;Wellness Champion&quot; é dado 
           automaticamente no fim do mês. Streak de 3 meses consecutivos ganha badge especial!
         </p>
       </div>
@@ -336,6 +336,13 @@ export const TourProvider: React.FC<TourProviderProps> = ({ children }) => {
     return () => observer.disconnect();
   }, []);
 
+  const startTour = useCallback((type: TourType) => {
+    const tourSteps = type === 'coach' ? COACH_TOUR_STEPS : ATHLETE_TOUR_STEPS;
+    setSteps(tourSteps);
+    setCurrentTourType(type);
+    setRun(true);
+  }, []);
+
   // Auto-iniciar tour no primeiro acesso
   useEffect(() => {
     if (!user) return;
@@ -343,7 +350,6 @@ export const TourProvider: React.FC<TourProviderProps> = ({ children }) => {
     const userRole = typeof user.role === 'string' ? user.role : (user.role as any);
     if (!userRole) return;
 
-    // Mapear role para tour type
     let tourType: TourType | null = null;
     if (['treinador', 'coordenador', 'dirigente'].includes(userRole)) {
       tourType = 'coach';
@@ -353,26 +359,17 @@ export const TourProvider: React.FC<TourProviderProps> = ({ children }) => {
 
     if (!tourType) return;
 
-    // Verificar se tour já foi completado
     const storageKey = `tour_completed_${tourType}`;
     const completed = localStorage.getItem(storageKey);
 
     if (!completed) {
-      // Aguardar 1 segundo para garantir que a UI foi renderizada
       const timer = setTimeout(() => {
         startTour(tourType!);
       }, 1000);
 
       return () => clearTimeout(timer);
     }
-  }, [user]);
-
-  const startTour = useCallback((type: TourType) => {
-    const tourSteps = type === 'coach' ? COACH_TOUR_STEPS : ATHLETE_TOUR_STEPS;
-    setSteps(tourSteps);
-    setCurrentTourType(type);
-    setRun(true);
-  }, []);
+  }, [startTour, user]);
 
   const skipTour = useCallback(() => {
     setRun(false);

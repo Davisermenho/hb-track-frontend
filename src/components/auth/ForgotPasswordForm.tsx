@@ -5,7 +5,7 @@
  * Layout alinhado ao Login (logo, fundo, tipografia e campos).
  */
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -26,11 +26,9 @@ type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
 export default function ForgotPasswordForm() {
   const router = useRouter();
   const { theme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const [mounted] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => setMounted(true), []);
 
   const {
     control,

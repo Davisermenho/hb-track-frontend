@@ -49,22 +49,23 @@ interface MobileSidebarProviderProps {
 }
 
 export function MobileSidebarProvider({ children }: MobileSidebarProviderProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [openPath, setOpenPath] = useState<string | null>(null);
   const pathname = usePathname();
-
-  // Fechar ao mudar de rota
-  useEffect(() => {
-    setIsOpen(false);
+  const isOpen = openPath === pathname;
+  const open = useCallback(() => setOpenPath(pathname), [pathname]);
+  const close = useCallback(() => setOpenPath(null), []);
+  const toggle = useCallback(() => {
+    setOpenPath((prev) => (prev === pathname ? null : pathname));
   }, [pathname]);
 
   // Fechar ao pressionar Escape
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsOpen(false);
+      if (e.key === 'Escape') close();
     };
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, []);
+  }, [close]);
 
   // Prevenir scroll do body quando aberto
   useEffect(() => {
@@ -77,10 +78,6 @@ export function MobileSidebarProvider({ children }: MobileSidebarProviderProps) 
       document.body.style.overflow = '';
     };
   }, [isOpen]);
-
-  const open = useCallback(() => setIsOpen(true), []);
-  const close = useCallback(() => setIsOpen(false), []);
-  const toggle = useCallback(() => setIsOpen(prev => !prev), []);
 
   return (
     <MobileSidebarContext.Provider value={{ isOpen, open, close, toggle }}>

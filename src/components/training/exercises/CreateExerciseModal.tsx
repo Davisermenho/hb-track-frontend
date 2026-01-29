@@ -12,7 +12,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { X, Youtube, Tag as TagIcon, FileText } from 'lucide-react';
 import { useCreateExercise, useExerciseTags } from '@/hooks/useExercises';
 import { ExerciseInput } from '@/lib/api/exercises';
@@ -51,10 +51,6 @@ export function CreateExerciseModal({ isOpen, onClose, onSuccess }: CreateExerci
   }));
 
   const [errors, setErrors] = useState<Partial<Record<keyof ExerciseInput, string>>>({});
-  const [youtubePreview, setYoutubePreview] = useState<string | null>(null);
-
-  // Reset form on open - usando key para forçar re-render em vez de useEffect
-  const formKey = isOpen ? 'open' : 'closed';
 
   // Update YouTube preview usando useMemo em vez de useEffect
   const youtubePreviewData = useMemo(() => {
@@ -75,14 +71,10 @@ export function CreateExerciseModal({ isOpen, onClose, onSuccess }: CreateExerci
     return { preview: null, error: undefined };
   }, [formData.media_url]);
 
-  // Atualizar estados derivados
-  useEffect(() => {
-    setYoutubePreview(youtubePreviewData.preview);
-    setErrors(prev => ({ 
-      ...prev, 
-      media_url: youtubePreviewData.error 
-    }));
-  }, [youtubePreviewData]);
+  const errorsWithMedia = useMemo(
+    () => ({ ...errors, media_url: youtubePreviewData.error }),
+    [errors, youtubePreviewData.error]
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -164,12 +156,12 @@ export function CreateExerciseModal({ isOpen, onClose, onSuccess }: CreateExerci
               value={formData.name}
               onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
               className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors.name ? 'border-red-500' : 'border-gray-300'
+                errorsWithMedia.name ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="Ex: Rondo 4x2, Finalização em velocidade..."
               disabled={createMutation.isPending}
             />
-            {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+            {errorsWithMedia.name && <p className="mt-1 text-sm text-red-600">{errorsWithMedia.name}</p>}
           </div>
 
           {/* Descrição */}
@@ -242,7 +234,7 @@ export function CreateExerciseModal({ isOpen, onClose, onSuccess }: CreateExerci
                 </div>
               </div>
             )}
-            {errors.tag_ids && <p className="mt-1 text-sm text-red-600">{errors.tag_ids}</p>}
+            {errorsWithMedia.tag_ids && <p className="mt-1 text-sm text-red-600">{errorsWithMedia.tag_ids}</p>}
           </div>
 
           {/* YouTube URL */}
@@ -257,20 +249,20 @@ export function CreateExerciseModal({ isOpen, onClose, onSuccess }: CreateExerci
               value={formData.media_url}
               onChange={(e) => setFormData((prev) => ({ ...prev, media_url: e.target.value }))}
               className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors.media_url ? 'border-red-500' : 'border-gray-300'
+                errorsWithMedia.media_url ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="https://www.youtube.com/watch?v=..."
               disabled={createMutation.isPending}
             />
-            {errors.media_url && <p className="mt-1 text-sm text-red-600">{errors.media_url}</p>}
+            {errorsWithMedia.media_url && <p className="mt-1 text-sm text-red-600">{errorsWithMedia.media_url}</p>}
 
             {/* Preview */}
-            {youtubePreview && (
+            {youtubePreviewData.preview && (
               <div className="mt-3">
                 <p className="text-sm text-gray-600 mb-2">Preview:</p>
                 <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
                   <iframe
-                    src={youtubePreview}
+                    src={youtubePreviewData.preview}
                     title="YouTube video preview"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen

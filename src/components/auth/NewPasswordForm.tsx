@@ -8,7 +8,7 @@
  * 3. Envia para o backend e vê o resultado na mesma página
  */
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -38,8 +38,7 @@ type NewPasswordFormData = z.infer<typeof newPasswordSchema>;
 
 function Header() {
   const { theme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const [mounted] = useState(true);
 
   return (
     <div className="text-center mb-6">

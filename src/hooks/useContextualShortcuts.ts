@@ -219,7 +219,7 @@ export function useContextualShortcuts(): UseContextualShortcutsReturn {
     );
 
     return unique;
-  }, [pathname, user?.role]);
+  }, [pathname, user]);
 
   // Separar ações rápidas de navegação
   const quickActions = useMemo(() => 

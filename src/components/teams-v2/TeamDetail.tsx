@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { GearIcon, Pencil1Icon, CheckIcon, ReloadIcon } from '@radix-ui/react-icons';
 import { Team, DetailTab } from '@/types/teams-v2';
 import { useTeamPermissions } from '@/lib/hooks/useTeamPermissions';
@@ -28,17 +28,26 @@ const TeamDetail: React.FC<TeamDetailProps> = ({ team, initialTab, isNewTeam = f
   // Permissões do usuário na equipe
   const { role, roleLabel, canManageTeam, isLoading: permissionsLoading } = useTeamPermissions(team?.id);
 
-  // Early return se team não carregou ainda
-  if (!team?.id) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="flex items-center gap-3">
-          <ReloadIcon className="w-5 h-5 animate-spin text-slate-400" />
-          <span className="text-slate-400">Carregando detalhes da equipe...</span>
-        </div>
-      </div>
-    );
-  }
+  // Detectar Enter para confirmar
+  const handleConfirmEdit = useCallback(() => {
+    if (teamName.trim().length >= 3) {
+      // Aqui você faria a chamada API para atualizar o nome
+      // await updateTeamName(team.id, teamName);
+      setIsEditingName(false);
+    } else {
+      setTeamName(team?.name || '');
+      setIsEditingName(false);
+    }
+  }, [team?.name, teamName]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleConfirmEdit();
+    } else if (e.key === 'Escape') {
+      setTeamName(team?.name || '');
+      setIsEditingName(false);
+    }
+  }, [handleConfirmEdit, team?.name]);
 
   // Focar no input quando entrar em modo de edição
   useEffect(() => {
@@ -60,29 +69,19 @@ const TeamDetail: React.FC<TeamDetailProps> = ({ team, initialTab, isNewTeam = f
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isEditingName, teamName]);
+  }, [handleConfirmEdit, isEditingName]);
 
-  // Detectar Enter para confirmar
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleConfirmEdit();
-    } else if (e.key === 'Escape') {
-      setTeamName(team?.name || '');
-      setIsEditingName(false);
-    }
-  };
-
-  const handleConfirmEdit = () => {
-    if (teamName.trim().length >= 3) {
-      // Aqui você faria a chamada API para atualizar o nome
-      // await updateTeamName(team.id, teamName);
-      if (team) team.name = teamName.trim();
-      setIsEditingName(false);
-    } else {
-      setTeamName(team?.name || '');
-      setIsEditingName(false);
-    }
-  };
+  // Early return se team não carregou ainda
+  if (!team?.id) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="flex items-center gap-3">
+          <ReloadIcon className="w-5 h-5 animate-spin text-slate-400" />
+          <span className="text-slate-400">Carregando detalhes da equipe...</span>
+        </div>
+      </div>
+    );
+  }
 
   const tabs = [
     { id: 'OVERVIEW', label: 'Visão Geral', icon: null, requiresAdmin: false },

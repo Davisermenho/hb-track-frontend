@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Cross2Icon, ChevronRightIcon, ChevronLeftIcon, QuestionMarkCircledIcon } from '@radix-ui/react-icons';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -64,29 +64,30 @@ const TOUR_STEPS: TourStep[] = [
 
 const StatsTour: React.FC<StatsTourProps> = ({ isOpen, onClose, onComplete }) => {
   const [currentStep, setCurrentStep] = useState(0);
-  const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+  const [viewportTick, setViewportTick] = useState(0);
 
-  const updateTargetRect = useCallback(() => {
+  const handleViewportChange = useCallback(() => {
+    setViewportTick((prev) => prev + 1);
+  }, []);
+
+  const targetRect = useMemo(() => {
+    if (!isOpen) return null;
     const step = TOUR_STEPS[currentStep];
-    if (step) {
-      const element = document.querySelector(step.target);
-      if (element) {
-        setTargetRect(element.getBoundingClientRect());
-      }
-    }
-  }, [currentStep]);
+    if (!step) return null;
+    const element = document.querySelector(step.target);
+    return element ? element.getBoundingClientRect() : null;
+  }, [currentStep, isOpen, viewportTick]);
 
   useEffect(() => {
     if (isOpen) {
-      updateTargetRect();
-      window.addEventListener('resize', updateTargetRect);
-      window.addEventListener('scroll', updateTargetRect);
+      window.addEventListener('resize', handleViewportChange);
+      window.addEventListener('scroll', handleViewportChange);
       return () => {
-        window.removeEventListener('resize', updateTargetRect);
-        window.removeEventListener('scroll', updateTargetRect);
+        window.removeEventListener('resize', handleViewportChange);
+        window.removeEventListener('scroll', handleViewportChange);
       };
     }
-  }, [isOpen, updateTargetRect]);
+  }, [isOpen, handleViewportChange]);
 
   const handleNext = () => {
     if (currentStep < TOUR_STEPS.length - 1) {

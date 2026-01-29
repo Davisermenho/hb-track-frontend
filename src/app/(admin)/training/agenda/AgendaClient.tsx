@@ -130,22 +130,6 @@ export default function AgendaClient() {
     }
   }, [selectedTeam?.id, updateUrlParams]);
 
-  // Reset forçado para semana atual quando necessário
-  useEffect(() => {
-    // Se estamos na view semanal e não há date na URL, sempre garantir que seja a semana atual
-    if (viewFromUrl === 'week' && !dateFromUrl) {
-      const today = new Date();
-      const day = today.getDay();
-      const diff = day === 0 ? 1 : 1 - day;
-      const monday = new Date(today);
-      monday.setDate(today.getDate() + diff);
-      monday.setHours(0, 0, 0, 0);
-
-      // Sempre definir para a semana atual quando não há date específica
-      setCurrentWeekStart(monday);
-    }
-  }, [viewFromUrl, dateFromUrl]); // Removido currentWeekStart das dependências para evitar loop
-
   useEffect(() => {
     if (searchParams.get('session')) {
       updateUrlParams({ session: null });
@@ -280,7 +264,7 @@ export default function AgendaClient() {
     if (selectedTeam?.id) {
       fetchSessions({ team_id: selectedTeam.id });
     }
-  }, [selectedTeam?.id, fetchSessions]);
+  }, [fetchSessions, selectedTeam]);
 
   // Handler para criar sessão
   const handleCreateSession = useCallback((date?: string) => {
@@ -320,7 +304,7 @@ export default function AgendaClient() {
         // A API pode não suportar busca textual, então fazemos filtro local
       });
     }
-  }, [selectedTeam?.id, fetchSessions]);
+  }, [fetchSessions, selectedTeam]);
 
   const handleMonthChange = useCallback((startDate: string, endDate: string) => {
     if (selectedTeam?.id) {
@@ -330,7 +314,7 @@ export default function AgendaClient() {
         end_date: endDate,
       });
     }
-  }, [selectedTeam?.id, fetchSessions]);
+  }, [fetchSessions, selectedTeam]);
 
   // Handler após criar sessão
   const handleSessionCreated = useCallback((createdSession: TrainingSession, intent: 'close' | 'continue') => {
@@ -350,7 +334,7 @@ export default function AgendaClient() {
     }
 
     toast.success('Rascunho criado com sucesso!');
-  }, [selectedTeam?.id, fetchSessions, toast]);
+  }, [fetchSessions, selectedTeam, toast]);
 
   return (
     <div className="min-h-screen bg-[#f6f6f8] dark:bg-[#111621]">

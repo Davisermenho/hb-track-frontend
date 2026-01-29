@@ -39,10 +39,14 @@ const TeamSelectModal: React.FC<TeamSelectModalProps> = ({
     team.gender?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Reset ao abrir
+  const handleClose = useCallback(() => {
+    setSearchQuery('');
+    onClose();
+  }, [onClose]);
+
+  // Focar ao abrir
   useEffect(() => {
     if (isOpen) {
-      setSearchQuery('');
       setTimeout(() => {
         searchInputRef.current?.focus();
       }, 100);
@@ -55,20 +59,20 @@ const TeamSelectModal: React.FC<TeamSelectModalProps> = ({
     
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose();
+        handleClose();
       }
     };
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, handleClose]);
 
   // Click fora do modal
   const handleBackdropClick = useCallback((e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
-      onClose();
+      handleClose();
     }
-  }, [onClose]);
+  }, [handleClose]);
 
   if (!isOpen) return null;
 
@@ -96,7 +100,7 @@ const TeamSelectModal: React.FC<TeamSelectModalProps> = ({
             </p>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           >
             <Cross2Icon className="w-5 h-5" />
@@ -144,7 +148,10 @@ const TeamSelectModal: React.FC<TeamSelectModalProps> = ({
               {filteredTeams.map((team) => (
                 <button
                   key={team.id}
-                  onClick={() => onSelect(team)}
+                  onClick={() => {
+                    onSelect(team);
+                    setSearchQuery('');
+                  }}
                   className="w-full flex items-center gap-4 px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors text-left group"
                 >
                   {/* Avatar */}

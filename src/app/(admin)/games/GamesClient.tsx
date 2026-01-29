@@ -11,7 +11,7 @@
  */
 
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useGamesContext, GameTab } from '@/context/GamesContext';
 import TeamSelectModal from '@/components/teams-v2/TeamSelectModal';
 import GamesHeader from '@/components/games/GamesHeader';
@@ -36,8 +36,6 @@ export default function GamesClient() {
     activeTab
   } = useGamesContext();
   
-  const [showTeamModal, setShowTeamModal] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
 
   // Query params
   const gameIdParam = searchParams.get('gameId');
@@ -62,17 +60,9 @@ export default function GamesClient() {
       setIsCreateModalOpen(true);
     }
 
-    setIsInitialized(true);
   }, [gameIdParam, tabParam, isNewParam, setSelectedGameId, setActiveTab, setIsCreateModalOpen]);
 
-  // Verifica se precisa mostrar modal de seleção de equipe
-  useEffect(() => {
-    if (!teamsLoading && !selectedTeam) {
-      setShowTeamModal(true);
-    } else {
-      setShowTeamModal(false);
-    }
-  }, [selectedTeam, teamsLoading]);
+  const showTeamModal = !teamsLoading && !selectedTeam;
 
   // Navegação para dashboard
   const navigateToDashboard = useCallback(() => {
@@ -105,7 +95,7 @@ export default function GamesClient() {
   }, [selectedGameId, searchParams, router, pathname]);
 
   // Loading state
-  if (teamsLoading || !isInitialized) {
+  if (teamsLoading) {
     return (
       <div className="flex h-full flex-col gap-6 p-6">
         <AppSkeleton variant="header" />
@@ -127,14 +117,12 @@ export default function GamesClient() {
         isLoading={teamsLoading}
         onSelect={(team) => {
           setSelectedTeam(team);
-          setShowTeamModal(false);
         }}
         onClose={() => {
           // Se não selecionou equipe, redireciona
           if (!selectedTeam) {
             router.push('/teams');
           }
-          setShowTeamModal(false);
         }}
       />
     );

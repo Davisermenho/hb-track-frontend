@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { Cross2Icon, DownloadIcon, PersonIcon, TargetIcon, ActivityLogIcon } from '@radix-ui/react-icons';
 import { ArrowLeftRight, TrendingUp, Activity, Users, Target } from 'lucide-react';
@@ -82,20 +82,11 @@ const TeamComparisonModal: React.FC<TeamComparisonModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  const [selectedTeamId, setSelectedTeamId] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [teams, setTeams] = useState<TeamMetrics[]>([]);
-
-  useEffect(() => {
-    if (isOpen) {
-      // Simular carregamento de times disponíveis
-      setTeams(mockTeams);
-      if (mockTeams.length > 0 && !selectedTeamId) {
-        const otherTeam = mockTeams.find(t => t.id !== currentTeamId);
-        if (otherTeam) setSelectedTeamId(otherTeam.id);
-      }
-    }
-  }, [isOpen, currentTeamId]);
+  const teams = useMemo(() => mockTeams, []);
+  const [selectedTeamId, setSelectedTeamId] = useState<string>(() => {
+    const otherTeam = mockTeams.find(t => t.id !== currentTeamId);
+    return otherTeam?.id || '';
+  });
 
   const currentTeam = teams.find(t => t.name === currentTeamName) || teams[0];
   const comparisonTeam = teams.find(t => t.id === selectedTeamId);

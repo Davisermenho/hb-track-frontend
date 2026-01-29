@@ -14,7 +14,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { TrainingSession } from '@/lib/api/trainings';
 
 export interface FocusBreakdown {
@@ -193,20 +193,21 @@ export function FocusMiniBar({
  * Hook para calcular dados de foco de uma sessão
  */
 export function useFocusData(session: TrainingSession | null) {
-  if (!session) {
-    return {
-      total: 0,
-      isValid: true,
-      isEmpty: true,
-      breakdown: {} as FocusBreakdown,
-      primaryFocus: null,
-      segments: [],
-    };
-  }
+  return useMemo(() => {
+    if (!session) {
+      return {
+        total: 0,
+        isValid: true,
+        isEmpty: true,
+        breakdown: {} as FocusBreakdown,
+        primaryFocus: null,
+        segments: [],
+      };
+    }
 
-  const total = sumFocus(session);
-  const isValid = total <= 120;
-  const isEmpty = total === 0;
+    const total = sumFocus(session);
+    const isValid = total <= 120;
+    const isEmpty = total === 0;
   
   const breakdown = FOCUS_CONFIG.reduce((acc, focus) => {
     const key = focus.key.replace('focus_', '').replace('_pct', '') as keyof FocusBreakdown;
@@ -222,17 +223,18 @@ export function useFocusData(session: TrainingSession | null) {
     return max;
   }, { label: '', value: 0 });
 
-  return {
-    total,
-    isValid,
-    isEmpty,
-    breakdown,
-    primaryFocus: primaryFocus.value > 0 ? primaryFocus : null,
-    segments: FOCUS_CONFIG.map(focus => ({
-      label: focus.label,
-      shortLabel: focus.shortLabel,
-      value: Number(session[focus.key]) || 0,
-      color: focus.color,
-    })).filter(s => s.value > 0),
-  };
+    return {
+      total,
+      isValid,
+      isEmpty,
+      breakdown,
+      primaryFocus: primaryFocus.value > 0 ? primaryFocus : null,
+      segments: FOCUS_CONFIG.map(focus => ({
+        label: focus.label,
+        shortLabel: focus.shortLabel,
+        value: Number(session[focus.key]) || 0,
+        color: focus.color,
+      })).filter(s => s.value > 0),
+    };
+  }, [session]);
 }

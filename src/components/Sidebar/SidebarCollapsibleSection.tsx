@@ -10,7 +10,7 @@
  * @version 1.0.0
  */
 
-import { useState, useEffect, ReactNode } from 'react';
+import { useState, ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -34,17 +34,16 @@ export function SidebarCollapsibleSection({
   storageKey,
   badge,
 }: SidebarCollapsibleSectionProps) {
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
-
-  // Carregar estado salvo do localStorage
-  useEffect(() => {
-    if (storageKey && typeof window !== 'undefined') {
-      const saved = localStorage.getItem(storageKey);
-      if (saved !== null) {
-        setIsExpanded(saved === 'true');
-      }
+  const [isExpanded, setIsExpanded] = useState(() => {
+    if (!storageKey || typeof window === 'undefined') {
+      return defaultExpanded;
     }
-  }, [storageKey]);
+    const saved = localStorage.getItem(storageKey);
+    if (saved !== null) {
+      return saved === 'true';
+    }
+    return defaultExpanded;
+  });
 
   // Salvar estado no localStorage
   const handleToggle = () => {

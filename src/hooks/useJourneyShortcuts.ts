@@ -11,7 +11,7 @@
  * @version 1.0.0
  */
 
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import {
@@ -120,21 +120,15 @@ const ROUTE_TO_CONTEXTUAL: Record<string, string> = {
 
 export function useJourneyShortcuts(): UseJourneyShortcutsReturn {
   const pathname = usePathname();
-  const [routeFrequency, setRouteFrequency] = useState<Record<string, number>>({});
-
-  // Carregar frequência do localStorage
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-          setRouteFrequency(JSON.parse(stored));
-        }
-      } catch (e) {
-        // Ignorar erro de parse
-      }
+  const [routeFrequency, setRouteFrequency] = useState<Record<string, number>>(() => {
+    if (typeof window === 'undefined') return {};
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      return stored ? JSON.parse(stored) : {};
+    } catch (e) {
+      return {};
     }
-  }, []);
+  });
 
   // Determinar atalho contextual baseado na rota atual
   const contextualShortcut = useMemo(() => {
@@ -195,13 +189,6 @@ export function useJourneyShortcuts(): UseJourneyShortcutsReturn {
       return updated;
     });
   }, []);
-
-  // Rastrear navegação automaticamente
-  useEffect(() => {
-    if (pathname) {
-      addFrequentRoute(pathname);
-    }
-  }, [pathname, addFrequentRoute]);
 
   // Combinar todos os atalhos
   const shortcuts = useMemo(() => {

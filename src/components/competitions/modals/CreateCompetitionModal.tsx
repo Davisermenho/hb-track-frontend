@@ -9,7 +9,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { X } from 'lucide-react';
 import { useCompetitionsContext } from '@/context/CompetitionsContext';
 import { useCreateCompetition, useUpdateCompetition, useCompetition } from '@/hooks/useCompetitions';
@@ -45,40 +45,36 @@ export default function CreateCompetitionModal({ editId }: CreateCompetitionModa
     name: '',
     kind: 'official',
   });
+  const [isDirty, setIsDirty] = useState(false);
   
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  // Populate form when editing
-  useEffect(() => {
-    if (competition && isEditing) {
-      setFormData({
+  const effectiveFormData = !isEditing || isDirty || !competition
+    ? formData
+    : {
         name: competition.name,
         kind: competition.kind || 'official',
-      });
-    }
-  }, [competition, isEditing]);
+      };
 
-  // Reset form when modal closes
-  useEffect(() => {
-    if (!isCreateModalOpen) {
-      setFormData({
-        name: '',
-        kind: 'official',
-      });
-      setErrors({});
-    }
-  }, [isCreateModalOpen]);
+  const handleClose = () => {
+    setFormData({
+      name: '',
+      kind: 'official',
+    });
+    setErrors({});
+    setIsDirty(false);
+    closeCreateModal();
+  };
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
     
-    if (!formData.name.trim()) {
+    if (!effectiveFormData.name.trim()) {
       newErrors.name = 'Nome é obrigatório';
-    } else if (formData.name.length < 3) {
+    } else if (effectiveFormData.name.length < 3) {
       newErrors.name = 'Nome deve ter pelo menos 3 caracteres';
     }
     
-    if (!formData.kind) {
+    if (!effectiveFormData.kind) {
       newErrors.kind = 'Tipo é obrigatório';
     }
     
@@ -94,17 +90,17 @@ export default function CreateCompetitionModal({ editId }: CreateCompetitionModa
     try {
       if (isEditing && competitionId) {
         const updateData: CompetitionUpdate = {
-          name: formData.name,
-          kind: formData.kind,
+          name: effectiveFormData.name,
+          kind: effectiveFormData.kind,
         };
         await updateMutation.mutateAsync({ 
           id: competitionId, 
           data: updateData 
         });
       } else {
-        await createMutation.mutateAsync(formData);
+        await createMutation.mutateAsync(effectiveFormData);
       }
-      closeCreateModal();
+      handleClose();
     } catch (error) {
       console.error('Erro ao salvar competição:', error);
     }
@@ -114,6 +110,7 @@ export default function CreateCompetitionModal({ editId }: CreateCompetitionModa
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
+    setIsDirty(true);
     setFormData(prev => ({ ...prev, [name]: value }));
     // Clear error when field is modified
     if (errors[name]) {
@@ -131,7 +128,7 @@ export default function CreateCompetitionModal({ editId }: CreateCompetitionModa
       {/* Backdrop */}
       <div 
         className="fixed inset-0 bg-black/50 transition-opacity"
-        onClick={closeCreateModal}
+        onClick={handleClose}
       />
 
       {/* Modal */}
@@ -146,6 +143,7 @@ export default function CreateCompetitionModal({ editId }: CreateCompetitionModa
               </h2>
               <button
                 onClick={closeCreateModal}
+                type="button"
                 className="p-2 rounded-lg text-gray-400 hover:text-gray-500 
                          hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               >
@@ -177,7 +175,7 @@ export default function CreateCompetitionModal({ editId }: CreateCompetitionModa
                       type="text"
                       id="name"
                       name="name"
-                      value={formData.name}
+                      value={effectiveFormData.name}
                       onChange={handleChange}
                       placeholder="Ex: Campeonato Estadual 2025"
                       className={`w-full px-4 py-2 rounded-lg border 
@@ -204,7 +202,7 @@ export default function CreateCompetitionModal({ editId }: CreateCompetitionModa
                     <select
                       id="kind"
                       name="kind"
-                      value={formData.kind}
+                      value={effectiveFormData.kind}
                       onChange={handleChange}
                       className={`w-full px-4 py-2 rounded-lg border 
                                ${errors.kind 
