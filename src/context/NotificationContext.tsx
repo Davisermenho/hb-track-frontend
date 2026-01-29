@@ -181,32 +181,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   }, [upsertNotification]);
 
   /**
-   * Handler: mudança de estado da conexão WebSocket
-   */
-  const handleStateChange = useCallback((event: Event) => {
-    const customEvent = event as CustomEvent<{ state: ConnectionState }>;
-    const newState = customEvent.detail.state;
-    
-    console.log(`[NotificationContext] Estado mudou para: ${newState}`);
-    setConnectionState(newState);
-
-    // Se entrou em error, iniciar polling fallback
-    if (newState === 'error') {
-      startPollingFallback();
-    } else if (newState === 'connected') {
-      stopPollingFallback();
-    }
-  }, []);
-
-  /**
-   * Handler: máximo de tentativas de reconexão atingido
-   */
-  const handleMaxReconnectAttempts = useCallback(() => {
-    console.warn('[NotificationContext] Máximo de tentativas excedido - ativando polling');
-    startPollingFallback();
-  }, []);
-
-  /**
    * Busca notificações via REST API (fallback)
    */
   const fetchNotifications = useCallback(async (unreadOnly: boolean = false) => {
@@ -336,6 +310,32 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   }, []);
 
   /**
+   * Handler: mudança de estado da conexão WebSocket
+   */
+  const handleStateChange = useCallback((event: Event) => {
+    const customEvent = event as CustomEvent<{ state: ConnectionState }>;
+    const newState = customEvent.detail.state;
+    
+    console.log(`[NotificationContext] Estado mudou para: ${newState}`);
+    setConnectionState(newState);
+
+    // Se entrou em error, iniciar polling fallback
+    if (newState === 'error') {
+      startPollingFallback();
+    } else if (newState === 'connected') {
+      stopPollingFallback();
+    }
+  }, [startPollingFallback, stopPollingFallback]);
+
+  /**
+   * Handler: máximo de tentativas de reconexão atingido
+   */
+  const handleMaxReconnectAttempts = useCallback(() => {
+    console.warn('[NotificationContext] Máximo de tentativas excedido - ativando polling');
+    startPollingFallback();
+  }, [startPollingFallback]);
+
+  /**
    * Reconecta WebSocket
    */
   const reconnect = useCallback(async () => {
@@ -383,7 +383,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
       stopPollingFallback();
       wsRef.current?.disconnect();
     };
-  }, []); // Executar apenas uma vez
+  }, [apiUrl, fetchNotifications, handleMaxReconnectAttempts, handleNotificationReceived, handleNotificationsLoaded, handleStateChange, stopPollingFallback]); // Executar apenas uma vez
 
   /**
    * Pedir permissão de notificações do navegador
